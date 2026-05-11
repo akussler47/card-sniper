@@ -1,5 +1,4 @@
 """
-
 Sports Card eBay Sniper - Browse API Edition
 Uses eBay Browse API (no rate limit issues) + auto token refresh.
 Run: python3 app.py  -->  opens http://127.0.0.1:5000
@@ -7,15 +6,14 @@ Run: python3 app.py  -->  opens http://127.0.0.1:5000
 
 from flask import Flask, render_template_string, jsonify, request, Response, stream_with_context
 from datetime import datetime
-import os, requests, json, time, threading, re, queue, base64
 
 app = Flask(__name__)
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 config = {
-    "app_id":              "AlexKuss-CardSnip-PRD-d099fbd12-1f009e65",
-    "cert_id":             "PRD-099fbd12df9e-f787-4c87-85ce-6e90",
+    "app_id":              "",
+    "cert_id":             "",
     "categories":          ["213"],   # 213=Baseball, 214=Hockey
     "min_discount_pct":    15.0,
     "min_discount_dollar": 5.0,
@@ -118,12 +116,18 @@ def search_new_listings():
     if config["max_price"] > 0:
         filters += f",price:[..{config['max_price']}]"
 
+    # Build keyword based on selected sports
+    cats = config["categories"]
+    kw_parts = []
+    if "213" in cats: kw_parts.append("baseball card")
+    if "214" in cats: kw_parts.append("hockey card")
+    kw = " ".join(kw_parts) if kw_parts else "sports card"
+
     params = {
-        "category_ids": cat_ids,
+        "q":            kw,
         "filter":       filters,
         "sort":         "newlyListed",
         "limit":        100,
-        "fieldgroups":  "MATCHING_ITEMS,EXTENDED",
     }
     try:
         r = requests.get(BROWSE_API, headers=hdrs, params=params, timeout=15)
