@@ -6,14 +6,14 @@ Run: python3 app.py  -->  opens http://127.0.0.1:5000
 
 from flask import Flask, render_template_string, jsonify, request, Response, stream_with_context
 from datetime import datetime
-
+import os, requests, json, time, threading, re, queue, base64
 app = Flask(__name__)
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 config = {
-    "app_id":              "",
-    "cert_id":             "",
+    "app_id":              "AlexKuss-CardSnip-PRD-d099fbd12-1f009e65",
+    "cert_id":             "PRD-099fbd12df9e-f787-4c87-85ce-6e90",
     "categories":          ["213"],   # 213=Baseball, 214=Hockey
     "min_discount_pct":    15.0,
     "min_discount_dollar": 5.0,
