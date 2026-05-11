@@ -1,4 +1,5 @@
 """
+
 Sports Card eBay Sniper - Browse API Edition
 Uses eBay Browse API (no rate limit issues) + auto token refresh.
 Run: python3 app.py  -->  opens http://127.0.0.1:5000
@@ -6,6 +7,7 @@ Run: python3 app.py  -->  opens http://127.0.0.1:5000
 
 from flask import Flask, render_template_string, jsonify, request, Response, stream_with_context
 from datetime import datetime
+import os, requests, json, time, threading, re, queue, base64
 
 app = Flask(__name__)
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
