@@ -1,0 +1,208 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Card Sniper</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:13px system-ui;background:#0f1117;color:#e8eaf0;display:flex;height:100vh;overflow:hidden}
+#side{width:280px;min-width:280px;background:#181c27;border-right:1px solid #2a2f42;overflow-y:auto;display:flex;flex-direction:column}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+h1{font-size:15px;padding:16px;border-bottom:1px solid #2a2f42}
+.sec{padding:10px 14px;border-bottom:1px solid #2a2f42}
+.lbl{font-size:10px;color:#7b82a0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;display:block}
+input[type=password],input[type=number]{width:100%;background:#1e2333;border:1px solid #2a2f42;border-radius:5px;color:#e8eaf0;padding:5px 8px;font-size:12px;margin-bottom:5px}
+input[type=password]:last-child,input[type=number]:last-child{margin-bottom:0}
+.pills{display:flex;flex-wrap:wrap;gap:4px}
+.pill{padding:3px 8px;border:1px solid #2a2f42;border-radius:20px;font-size:11px;cursor:pointer;color:#7b82a0;user-select:none;transition:.1s}
+.pill:hover{color:#e8eaf0}.pill input{display:none}
+.pill.on{background:#1e2333;border-color:#4a5170;color:#e8eaf0}
+.pill.psa{border-color:#3b82f6;color:#93c5fd;background:rgba(59,130,246,.1)}
+.pill.bgs{border-color:#f59e0b;color:#fcd34d;background:rgba(245,158,11,.1)}
+.pill.sgc{border-color:#22c55e;color:#86efac;background:rgba(34,197,94,.1)}
+.pill.raw{border-color:#8b5cf6;color:#c4b5fd;background:rgba(139,92,246,.1)}
+.pill.typ{border-color:#6366f1;color:#a5b4fc;background:rgba(99,102,241,.1)}
+.toggle{padding:5px 11px;border:1px solid #2a2f42;border-radius:20px;font-size:12px;cursor:pointer;color:#7b82a0;user-select:none;transition:.1s}
+.toggle.on{background:#6366f1;border-color:#6366f1;color:#fff;font-weight:500}
+.toggle input{display:none}
+.num2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.num2 label{font-size:11px;color:#7b82a0;display:block;margin-bottom:3px}
+#btn{margin:12px 14px;padding:10px;background:#6366f1;border:none;border-radius:7px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;width:calc(100% - 28px)}
+#btn.stop{background:#374151}
+#st{margin:0 14px 10px;padding:6px 10px;background:#1e2333;border-radius:6px;font-size:11px;color:#7b82a0;display:flex;align-items:center;gap:5px}
+.dot{width:6px;height:6px;border-radius:50%;background:#7b82a0;flex-shrink:0}
+.dot.g{background:#22c55e;animation:blink 1.2s infinite}
+.dot.a{background:#f59e0b;animation:blink 1.2s infinite}
+.dot.r{background:#ef4444}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:10px 14px;margin-top:auto;border-top:1px solid #2a2f42}
+.stat{background:#1e2333;border-radius:6px;padding:6px;text-align:center}
+.sv{font-size:16px;font-weight:700}.sl{font-size:9px;color:#7b82a0;margin-top:2px;text-transform:uppercase}
+#fh{padding:11px 16px;border-bottom:1px solid #2a2f42;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#fh h2{font-size:13px;font-weight:600}
+.sm{padding:4px 10px;background:#1e2333;border:1px solid #2a2f42;border-radius:5px;color:#7b82a0;font-size:11px;cursor:pointer}
+#cb{height:2px;background:#2a2f42;flex-shrink:0;display:none}
+#cf{height:100%;background:#6366f1;transition:width 1s linear}
+#tw{flex:1;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+thead th{position:sticky;top:0;background:#13172099;backdrop-filter:blur(8px);padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#7b82a0;border-bottom:1px solid #2a2f42;white-space:nowrap}
+thead th.r{text-align:right}
+tbody tr{border-bottom:1px solid #2a2f42;cursor:pointer;animation:ri .3s ease}
+tbody tr.fx{background:#1e2333}tbody tr.au{background:#23293b}
+tbody tr:hover{filter:brightness(1.15)}
+@keyframes ri{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+td{padding:7px 10px;vertical-align:middle}
+.th{width:52px}.tm{width:44px;height:58px;object-fit:cover;border-radius:3px;border:1px solid #2a2f42;display:block}
+.tp{width:44px;height:58px;border-radius:3px;border:1px solid #2a2f42;background:#181c27;display:flex;align-items:center;justify-content:center;font-size:18px}
+.pn{font-size:12px;font-weight:500;line-height:1.3}.ps{font-size:10px;color:#7b82a0;margin-top:2px}
+.rt{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.tg{font-size:9px;padding:1px 5px;border-radius:10px;font-weight:500}
+.tgr{background:rgba(59,130,246,.15);color:#93c5fd}
+.tgt{background:rgba(99,102,241,.15);color:#a5b4fc}
+.tgo{background:rgba(34,197,94,.12);color:#86efac}
+.ll{font-size:11px;color:#93c5fd;text-decoration:none;line-height:1.3;display:block}
+.ll:hover{text-decoration:underline}
+.cn{font-size:10px;color:#7b82a0;margin-top:2px}
+.r{text-align:right}
+.sv2{font-size:13px;font-weight:700}.sp{font-size:10px;color:#7b82a0;margin-top:1px}
+.cv{font-size:13px;font-weight:600}.ev{font-size:12px;color:#7b82a0}
+#er td{padding:50px 20px;text-align:center;color:#7b82a0}
+.gi{font-size:32px;opacity:.3;margin-bottom:8px}
+</style></head><body>
+<aside id="side">
+<h1>🃏 Card Sniper</h1>
+<div class="sec"><span class="lbl">eBay Credentials</span>
+<input type="password" id="ai" placeholder="App ID (Client ID)">
+<input type="password" id="ci" placeholder="Cert ID (Client Secret)">
+</div>
+<div class="sec"><span class="lbl">Sport</span>
+<div style="display:flex;gap:6px">
+<label class="toggle on" id="tb"><input type="checkbox" checked> ⚾ Baseball</label>
+<label class="toggle" id="th2"><input type="checkbox"> 🏒 Hockey</label>
+</div></div>
+<div class="sec"><span class="lbl">Grading</span>
+<div style="font-size:10px;color:#7b82a0;margin-bottom:4px">PSA</div><div class="pills" id="pp"></div>
+<div style="font-size:10px;color:#7b82a0;margin:6px 0 4px">BGS</div><div class="pills" id="bp"></div>
+<div style="font-size:10px;color:#7b82a0;margin:6px 0 4px">SGC</div><div class="pills" id="sp2"></div>
+<div style="font-size:10px;color:#7b82a0;margin:6px 0 4px">Other</div><div class="pills" id="op"></div>
+</div>
+<div class="sec"><span class="lbl">Card Type</span><div class="pills" id="tp"></div></div>
+<div class="sec"><span class="lbl">Filters</span>
+<div class="num2" style="margin-bottom:8px">
+<div><label>Min $ saved</label><input type="number" id="mu" value="5" min="0"></div>
+<div><label>Min % saved</label><input type="number" id="mp" value="15" min="1"></div>
+</div>
+<div class="num2">
+<div><label>Max price ($)</label><input type="number" id="mx" placeholder="No limit"></div>
+<div><label>Scan every (s)</label><input type="number" id="iv" value="120" min="60"></div>
+</div></div>
+<button id="btn" onclick="toggle()">▶ Start Scanning</button>
+<div id="st"><span class="dot" id="dot"></span><span id="stx">Idle</span></div>
+<div class="stats">
+<div class="stat"><div class="sv" id="sc">0</div><div class="sl">Checked</div></div>
+<div class="stat"><div class="sv" id="sf">0</div><div class="sl">Deals</div></div>
+<div class="stat"><div class="sv" id="sn">—</div><div class="sl">Next</div></div>
+</div></aside>
+<main id="main">
+<div id="fh"><h2>Live Deal Feed</h2><button class="sm" onclick="clr()">Clear</button></div>
+<div id="cb"><div id="cf"></div></div>
+<div id="tw"><table><thead><tr>
+<th class="th">Pic</th><th>Product</th><th>Listing Title</th>
+<th class="r" style="width:75px">Savings</th><th class="r" style="width:70px">Cost</th><th class="r" style="width:75px">Est. Value</th>
+</tr></thead><tbody id="tb2">
+<tr id="er"><td colspan="6"><div class="gi">🔍</div><p>No deals yet</p><small>Enter credentials, set filters, hit Start Scanning.</small></td></tr>
+</tbody></table></div></main>
+<script>
+const PSA=["PSA 10","PSA 9","PSA 8","PSA 7","PSA 6","PSA 5","PSA Auth"];
+const BGS=["BGS 10","BGS 9.5","BGS 9","BGS 8.5","BGS 8"];
+const SGC=["SGC 10","SGC 9.5","SGC 9","SGC 8"];
+const OTH=["Raw/Ungraded","CSG 10","HGA 10"];
+const TYP=["Rookie","Auto/Signed","Refractor/Prizm","1/1 & Superfractor","Patch/Relic","Vintage (pre-1980)","Lot/Bulk","Short Print","Parallel","Serial Numbered"];
+const AG=new Set(),AT=new Set();
+let running=false,es=null,li=120;
+function mkP(id,items,set,cls){
+  const el=document.getElementById(id);
+  items.forEach(i=>{
+    const l=document.createElement("label");
+    l.className="pill";l.dataset.v=i;
+    l.innerHTML=`<input type="checkbox"> ${i}`;
+    l.querySelector("input").onchange=function(){this.checked?(set.add(i),l.classList.add(cls)):(set.delete(i),l.classList.remove(cls))};
+    el.appendChild(l);
+  });
+}
+mkP("pp",PSA,AG,"psa");mkP("bp",BGS,AG,"bgs");mkP("sp2",SGC,AG,"sgc");mkP("op",OTH,AG,"raw");mkP("tp",TYP,AT,"typ");
+document.querySelectorAll(".toggle").forEach(l=>{l.querySelector("input").onchange=function(){l.classList.toggle("on",this.checked)}});
+async function loadCfg(){
+  try{
+    const c=await fetch("/api/config").then(r=>r.json());
+    if(c.app_id)document.getElementById("ai").value=c.app_id;
+    if(c.cert_id)document.getElementById("ci").value=c.cert_id;
+    if(c.categories){
+      document.querySelector("#tb input").checked=c.categories.includes("213");
+      document.querySelector("#th2 input").checked=c.categories.includes("214");
+      document.querySelectorAll(".toggle").forEach(l=>l.classList.toggle("on",l.querySelector("input").checked));
+    }
+    if(c.min_usd)document.getElementById("mu").value=c.min_usd;
+    if(c.min_pct)document.getElementById("mp").value=c.min_pct;
+    if(c.max_price)document.getElementById("mx").value=c.max_price||"";
+    if(c.scan_interval)document.getElementById("iv").value=c.scan_interval;
+    if(c.grade_filters)c.grade_filters.forEach(g=>{AG.add(g);document.querySelectorAll(".pill").forEach(l=>{if(l.dataset.v===g){l.querySelector("input").checked=true;l.classList.add(g.startsWith("PSA")?"psa":g.startsWith("BGS")?"bgs":g.startsWith("SGC")?"sgc":"raw")}})});
+    if(c.type_filters)c.type_filters.forEach(t=>{AT.add(t);document.querySelectorAll(".pill").forEach(l=>{if(l.dataset.v===t){l.querySelector("input").checked=true;l.classList.add("typ")}})});
+  }catch(e){}
+}
+loadCfg();
+function bld(){
+  const cats=[];
+  if(document.querySelector("#tb input").checked)cats.push("213");
+  if(document.querySelector("#th2 input").checked)cats.push("214");
+  if(!cats.length)cats.push("213");
+  return{app_id:document.getElementById("ai").value.trim(),cert_id:document.getElementById("ci").value.trim(),categories:cats,grade_filters:[...AG],type_filters:[...AT],min_usd:parseFloat(document.getElementById("mu").value)||5,min_pct:parseFloat(document.getElementById("mp").value)||15,max_price:parseFloat(document.getElementById("mx").value)||0,scan_interval:parseInt(document.getElementById("iv").value)||120};
+}
+async function toggle(){
+  if(!running){
+    const c=bld();
+    if(!c.app_id||!c.cert_id){alert("Enter both App ID and Cert ID first.");return}
+    await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(c)});
+    await fetch("/api/start",{method:"POST"});
+    startSSE();setR(true);
+  }else{
+    await fetch("/api/stop",{method:"POST"});
+    if(es){es.close();es=null}setR(false);
+  }
+}
+function setR(on){running=on;const b=document.getElementById("btn");b.textContent=on?"⏹ Stop Scanning":"▶ Start Scanning";b.classList.toggle("stop",on)}
+function startSSE(){if(es)es.close();es=new EventSource("/stream");es.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==="deal")addRow(m.deal)};es.onerror=()=>{setTimeout(()=>{if(running)startSSE()},3000)}}
+setInterval(async()=>{
+  try{
+    const s=await fetch("/api/status").then(r=>r.json());
+    const dot=document.getElementById("dot"),stx=document.getElementById("stx");
+    dot.className="dot";
+    if(s.running){
+      if(s.status==="scanning"){dot.classList.add("a");stx.textContent="Scanning eBay…"}
+      else if(s.status==="waiting"){dot.classList.add("g");const sc=s.next;stx.textContent=sc>0?`Next scan in ${sc}s`:"Preparing…";li=parseInt(document.getElementById("iv").value)||120;document.getElementById("cb").style.display="block";document.getElementById("cf").style.width=(sc/li*100)+"%"}
+      else if(s.status==="error"){dot.classList.add("r");stx.textContent=s.error||"Error — retrying"}
+    }else{stx.textContent="Idle";document.getElementById("cb").style.display="none"}
+    document.getElementById("sc").textContent=(s.checked||0).toLocaleString();
+    document.getElementById("sf").textContent=(s.found||0).toLocaleString();
+    document.getElementById("sn").textContent=s.next>0?s.next+"s":"—";
+  }catch(e){}
+},2000);
+function addRow(d){
+  const tb=document.getElementById("tb2");
+  document.getElementById("er")?.remove();
+  const au=(d.listing_type||"").toLowerCase().includes("auction");
+  const pc=d.disc_pct;const sc=pc>=30?"#22c55e":pc>=20?"#4ade80":"#f59e0b";
+  const tags=[au?'<span class="tg tgo">Auction</span>':'<span class="tg tgt">Fixed</span>',d.best_offer?'<span class="tg tgo">Make Offer</span>':"",
+    ...d.tags.map(t=>`<span class="tg ${t.cls==="grade"?"tgr":"tgt"}">${t.label}</span>`)].filter(Boolean).join("");
+  const ti=d.title.length>90?d.title.slice(0,88)+"…":d.title;
+  const pn=d.title.length>40?d.title.slice(0,38)+"…":d.title;
+  const img=d.img?`<img class="tm" src="${d.img}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'tp\\'>🃏</div>'">`:`<div class="tp">🃏</div>`;
+  const tr=document.createElement("tr");
+  tr.className=au?"au":"fx";tr.onclick=()=>window.open(d.url,"_blank");
+  tr.innerHTML=`<td class="th">${img}</td>
+    <td><div class="pn">${pn}</div><div class="ps">${d.category||"Card"} · ${d.found_at}</div><div class="rt">${tags}</div></td>
+    <td><a class="ll" href="${d.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${ti}</a><div class="cn">Based on ${d.comp_count} recent comps</div></td>
+    <td class="r"><div class="sv2" style="color:${sc}">$${d.disc_usd.toFixed(2)}</div><div class="sp">${d.disc_pct}% off</div></td>
+    <td class="r"><div class="cv">$${d.price.toFixed(2)}</div></td>
+    <td class="r"><div class="ev">$${d.market_value.toFixed(2)}</div><div class="sp">${d.comp_count} comps</div></td>`;
+  tb.insertBefore(tr,tb.firstChild);
+  while(tb.rows.length>200)tb.deleteRow(tb.rows.length-1);
+}
+async function clr(){await fetch("/api/clear",{method:"POST"});document.getElementById("tb2").innerHTML='<tr id="er"><td colspan="6"><div class="gi">🔍</div><p>Feed cleared</p></td></tr>'}
+</script></body></html>
