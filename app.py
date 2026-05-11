@@ -6,7 +6,7 @@ Run: python3 app.py  -->  opens http://127.0.0.1:5000
 
 from flask import Flask, render_template_string, jsonify, request, Response, stream_with_context
 from datetime import datetime
-import os, requests, json, time, threading, re, queue, base64
+
 app = Flask(__name__)
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
 
@@ -145,45 +145,92 @@ def search_new_listings():
         return []
 
 
-def get_price_comps(title, cat_id):
-    """
-    Estimate market value by searching Browse API for similar items
-    and averaging their current prices. Uses aggressive caching.
-    """
-    stop = {"card","cards","baseball","hockey","football","basketball",
-            "sports","trading","with","the","and","for","lot","bundle"}
-    words = re.findall(r"[A-Za-z0-9#']+", title)
-    kw    = " ".join(w for w in words if w.lower() not in stop)[:60]
-    key   = re.sub(r'\s+', ' ', kw.lower()[:40])
+FINDING_API = "https://svcs.ebay.com/services/search/FindingService/v1"
 
+def extract_grade(title):
+    tl = title.lower()
+    for grade in ["psa 10","psa 9","psa 8","psa 7","psa 6","psa 5",
+                  "bgs 10","bgs 9.5","bgs 9","bgs 8.5","bgs 8",
+                  "sgc 10","sgc 9.5","sgc 9","sgc 8"]:
+        if grade in tl:
+            return grade
+    return None
+
+def build_comp_kw(title):
+    stop = {"card","cards","baseball","hockey","football","basketball",
+            "sports","trading","with","the","and","for","lot","bundle",
+            "mint","near","very","good","excellent","topps","panini",
+            "bowman","fleer","donruss","upper","deck"}
+    words = re.findall(r"[A-Za-z0-9#']+", title)
+    filtered = [w for w in words if w.lower() not in stop and len(w) > 1]
+    grade = extract_grade(title)
+    kw = " ".join(filtered[:6])
+    if grade and grade not in kw.lower():
+        kw = kw + " " + grade
+    return kw[:80]
+
+def get_price_comps(title, cat_id):
+    """Get market value from eBay SOLD listings — much more accurate than active prices."""
+    kw  = build_comp_kw(title)
+    key = re.sub(r'\s+', ' ', kw.lower()[:50])
     now = time.time()
     if key in comp_cache and now - comp_cache[key][0] < CACHE_TTL:
         return comp_cache[key][1]
 
-    hdrs = browse_headers()
-    if not hdrs:
-        return []
-
-    params = {
-        "q":            kw,
-        "category_ids": cat_id,
-        "filter":       "buyingOptions:{FIXED_PRICE}",
-        "sort":         "bestMatch",
-        "limit":        20,
-    }
+    app_id = config.get("app_id", "")
     prices = []
-    try:
-        r = requests.get(BROWSE_API, headers=hdrs, params=params, timeout=10)
-        data = r.json()
-        for item in data.get("itemSummaries", []):
+
+    # Try Finding API sold comps first
+    if app_id:
+        params = {
+            "OPERATION-NAME":                 "findCompletedItems",
+            "SERVICE-VERSION":                "1.0.0",
+            "SECURITY-APPNAME":               app_id,
+            "RESPONSE-DATA-FORMAT":           "JSON",
+            "keywords":                       kw,
+            "categoryId":                     cat_id,
+            "paginationInput.entriesPerPage": "15",
+            "itemFilter(0).name":             "SoldItemsOnly",
+            "itemFilter(0).value":            "true",
+            "itemFilter(1).name":             "ListingType",
+            "itemFilter(1).value(0)":         "FixedPrice",
+            "itemFilter(1).value(1)":         "Auction",
+            "itemFilter(1).value(2)":         "AuctionWithBIN",
+            "sortOrder":                      "EndTimeSoonest",
+        }
+        try:
+            r = requests.get(FINDING_API, params=params, timeout=10)
+            data = r.json()
+            result = data.get("findCompletedItemsResponse", [{}])[0]
+            if result.get("ack", [""])[0] == "Success":
+                items = result.get("searchResult", [{}])[0].get("item", [])
+                for item in items:
+                    try:
+                        p = float(item["sellingStatus"][0]["currentPrice"][0]["__value__"])
+                        if p > 0: prices.append(p)
+                    except: pass
+                print(f"[Comps] {len(prices)} sold comps for: {kw[:40]}")
+        except Exception as e:
+            print(f"[Comps] Finding API error: {e}")
+
+    # Fall back to Browse API active listings if no sold comps found
+    if len(prices) < 2:
+        hdrs = browse_headers()
+        if hdrs:
             try:
-                p = float(item["price"]["value"])
-                if p > 0:
-                    prices.append(p)
-            except:
-                pass
-    except Exception as e:
-        print(f"[Comps] Exception: {e}")
+                r = requests.get(BROWSE_API, headers=hdrs,
+                    params={"q": kw, "category_ids": cat_id,
+                            "filter": "buyingOptions:{FIXED_PRICE}",
+                            "sort": "bestMatch", "limit": 15},
+                    timeout=10)
+                for item in r.json().get("itemSummaries", []):
+                    try:
+                        p = float(item["price"]["value"])
+                        if p > 0: prices.append(p)
+                    except: pass
+                print(f"[Comps] Fallback: {len(prices)} active listings")
+            except Exception as e:
+                print(f"[Comps] Browse fallback error: {e}")
 
     comp_cache[key] = (now, prices)
     return prices
